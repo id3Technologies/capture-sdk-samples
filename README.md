@@ -17,8 +17,8 @@ The version of this repository is made of 4 digits:
 This strategy is employed to ensure version consistency among the various supported languages. When updating the Camera SDK version, all the samples are updated as well.
 
 For this release of the samples the version numbers are: 
-* Samples version: **1.4.4.0**
-* Required id3 Camera SDK version: **1.4.4**
+* Samples version: **1.4.5.1**
+* Required id3 Camera SDK version: **1.4.5**
 
 ## Getting started
 

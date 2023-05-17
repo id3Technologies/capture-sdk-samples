@@ -32,9 +32,10 @@ public:
 	virtual void Dump(CDumpContext& dc) const;
 #endif
     void DisposeCapture();
+    void LoadImage(CString &sFilePath);
 
 protected:  // membres incorporés de la barre de contrôle
-	CStatusBar        m_wndStatusBar;
+	CStatusBar    m_wndStatusBar;
 	CChildView    m_wndView;
 
 // Fonctions générées de la table des messages

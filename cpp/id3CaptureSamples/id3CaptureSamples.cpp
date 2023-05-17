@@ -19,6 +19,7 @@
 
 BEGIN_MESSAGE_MAP(id3CaptureSamplesApp, CWinApp)
 	ON_COMMAND(ID_APP_ABOUT, &id3CaptureSamplesApp::OnAppAbout)
+    ON_COMMAND(ID_FILE_OPEN, &id3CaptureSamplesApp::OnFileOpen)
 END_MESSAGE_MAP()
 
 
@@ -132,6 +133,15 @@ void id3CaptureSamplesApp::OnAppAbout()
 }
 
 // gestionnaires de messages de id3CaptureSamplesApp
-
+void id3CaptureSamplesApp::OnFileOpen()
+{
+    const TCHAR szFilter[] = _T("Image Files (*.jpg;*.bmp;*.png)|*.jpg;*.bmp;*.png|All Files (*.*)|*.*||");
+    CFileDialog dlg(FALSE, _T("csv"), NULL, OFN_HIDEREADONLY | OFN_READONLY, szFilter, NULL);
+    if(dlg.DoModal() == IDOK)
+    {
+        CString sFilePath = dlg.GetPathName();
+        ((CMainFrame*)m_pMainWnd)->LoadImage(sFilePath);
+    }
+}
 
 

@@ -81,6 +81,11 @@ void CMainFrame::DisposeCapture()
     m_wndView.Dispose();
 }
 
+void CMainFrame::LoadImage(CString &sFilePath)
+{
+    m_wndView.LoadImage(sFilePath);
+}
+
 // diagnostics de CMainFrame
 
 #ifdef _DEBUG

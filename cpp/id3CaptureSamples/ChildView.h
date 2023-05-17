@@ -5,6 +5,8 @@
 
 #pragma once
 #include <id3CameraManager.h>
+#include <string>
+#include <vector>
 
 
 // fenêtre de CChildView
@@ -23,6 +25,7 @@ protected:
     int m_cameraSlot;
     CImage m_image;
     ID3_IMAGE hCurrentPicture;
+    std::vector<uint8_t> m_pixels;
 
 // Opérations
 public:
@@ -34,6 +37,8 @@ public:
     void DeviceEventHandler(id3CameraDeviceEventType type, int32_t device_id);
     void DeviceSelectedEventHandler(int camera_slot, int32_t device_id);
     void ImageCapturedEventHandler(int32_t device_id);
+
+    void LoadImage(CString &sFilePath);
 
 // Substitutions
 	protected:

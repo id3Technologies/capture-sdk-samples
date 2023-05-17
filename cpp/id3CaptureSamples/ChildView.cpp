@@ -1,13 +1,11 @@
 
-// ChildView.cpp : implémentation de la classe CChildView
+// ChildView.cpp : CChildView class implementation
 //
 
 #include "pch.h"
 #include "framework.h"
 #include "id3CaptureSamples.h"
 #include "ChildView.h"
-#include <string>
-#include <vector>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -255,8 +253,52 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 END_MESSAGE_MAP()
 
 
+void CChildView::LoadImage(CString &sFilePath)
+{
+    int currentDeviceId = 0;
+    id3CameraManager_GetSelectedDevice(m_cameraSlot, &currentDeviceId);
+    if (currentDeviceId != 0)
+    {
+        MessageBoxA(nullptr, "Unable to load an image when a camera is in used", "LoadImage", MB_OK);
+        return;
+    }
 
-// gestionnaires de messages de CChildView
+    CImage fileImage;
+    auto result = fileImage.Load(sFilePath);
+    if (result == 0)
+    {
+        int sdk_err = id3CameraError_Base;
+        int bpp = fileImage.GetBPP();
+        if (bpp == 24)
+        {
+            int w = fileImage.GetWidth();
+            int h = fileImage.GetHeight();
+            int s = fileImage.GetPitch();
+            // Check the stride because it may not be pixel-width aligned and may be negative (bottom-up DIB).
+            if (s < 0) 
+            {
+                s = -s;
+            }
+
+            int dst_stride = 3 * w;
+            m_pixels.clear();
+            m_pixels.resize(dst_stride * h);
+            for (int y = 0; y < h; y++)
+            {
+                auto px_addr = fileImage.GetPixelAddress(0, y);
+                memcpy(&m_pixels[y * dst_stride], px_addr, s);
+            }
+            sdk_err = id3Image_FromValues(hCurrentPicture, w, h, id3ImagePixelFormat_Bgr_24bits, m_pixels.data());
+        }
+        if (sdk_err == id3CameraError_Success)
+        {
+            m_image.Destroy();
+            Invalidate(TRUE);
+        }
+    }
+}
+
+// CChildView message handlers
 
 BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs) 
 {
@@ -287,7 +329,7 @@ BOOL CChildView::OnEraseBkgnd(CDC* pDC)
 int frameCount = 1;
 void CChildView::OnPaint() 
 {
-	CPaintDC dc(this); // contexte de périphérique pour la peinture
+	CPaintDC dc(this); // device background for painting
 
     int height = 0;
     id3Image_GetHeight(hCurrentPicture, &height);
@@ -299,15 +341,25 @@ void CChildView::OnPaint()
         {
             m_image.Create(width, -height, 24); // -height because need top-down DIB 
         }
+        unsigned char *pixels_src{};
+        id3Image_GetPixels(hCurrentPicture, &pixels_src);
         int stride_src = 0;
         id3Image_GetStride(hCurrentPicture, &stride_src);
         int stride_dst = m_image.GetPitch();
         if (stride_dst == stride_src)
         {
             void *pixels_dst = m_image.GetBits();
-            unsigned char *pixels_src;
-            id3Image_GetPixels(hCurrentPicture, &pixels_src);
             memcpy(pixels_dst, pixels_src, stride_src * height);
+        }
+        else
+        {
+            // need to change the stride
+            for (int y=0; y < height; y++)
+            {
+                void *pixels_dst = m_image.GetPixelAddress(0, y);
+                memcpy(pixels_dst, pixels_src, stride_src);
+                pixels_src += stride_src;
+            }
         }
     }
 
@@ -337,8 +389,8 @@ void CChildView::OnPaint()
             }
             destRect.left = rect.left + (rect.right - w) / 2;
             destRect.top = rect.top + (rect.bottom - h) / 2;
-            destRect.right = w;
-            destRect.bottom = h;
+            destRect.right = destRect.left + w;
+            destRect.bottom = destRect.top + h;
 
             dc.SetStretchBltMode(HALFTONE);
             m_image.StretchBlt(dc.GetSafeHdc(), destRect, SRCCOPY);
@@ -346,4 +398,3 @@ void CChildView::OnPaint()
     }
 	// Ne pas appeler CWnd::OnPaint() pour la peinture des messages
 }
-
